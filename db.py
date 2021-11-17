@@ -82,6 +82,22 @@ def get_classes () -> list:
 
 	return rows.fetchall()
 
+def get_class_label (id: int) -> str:
+	con = sl.connect(DB_PATH)
+	cursor = con.cursor()
+
+	rows = cursor.execute("""
+		SELECT class FROM class WHERE id=(?);
+	""", (id,))
+	return rows.fetchone()[0]
+
+def get_training_data () -> list:
+	
+	con = sl.connect(DB_PATH)
+	rows = con.execute("SELECT * FROM tagged_faces WHERE class!=-1")
+
+	return rows.fetchall()
+
 def print_error (er):
 	exc_type, exc_value, exc_tb = sys.exc_info()
 	print(' '.join(traceback.format_exception(exc_type, exc_value, exc_tb)))
