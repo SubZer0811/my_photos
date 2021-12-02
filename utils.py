@@ -16,7 +16,7 @@ classes = ['faces']
 colors = [(0, 255, 0)]
 print("[+] Face Detection Model Loaded Successfully!")
 
-import face_classifier as fc
+# import face_classifier as fc
 
 def imshow (win_name, img):
 	cv2.namedWindow(win_name, cv2.WND_PROP_FULLSCREEN | cv2.WINDOW_NORMAL)
