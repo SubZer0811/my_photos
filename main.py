@@ -226,8 +226,8 @@ def classify_face (img) -> dict:
 	
 	return dict(results[:5])
 
-# add_image('images/DSC_0404.JPG')
-tag_image('images/DSC_0405.JPG')
+# add_image('images/DSC_0406.JPG')
+# tag_image('images/DSC_0406.JPG')
 
-print(dict(db.get_classes()))
-print(classify_face(cv2.imread('faces/DSC_0403_2.png')))
+# print(dict(db.get_classes()))
+print(classify_face(cv2.imread('faces/DSC_0403_1.png')))
