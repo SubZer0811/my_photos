@@ -246,53 +246,58 @@ def tag_all_faces() -> None:
 	query = "SELECT face_path FROM untagged_images"
 	rows = cursor.execute(query)
 	face_paths = [i[0] for i in rows.fetchall()]
+	print("FACE PATHS ", len(face_paths), face_paths)
 	low_acc=[]
 
 	for face_path in face_paths:
-			print(face_path)
 
-			img = cv2.imread(face_path)
-			class_acc = classify_face(img)
-			flag = True
-			acc_keys = list(class_acc.keys())
-			max_acc_class = acc_keys[0] if len(acc_keys) else None
-			if max_acc_class is not None and class_acc[max_acc_class] < CLASSIFY_THRESH:
-				# face_class = user_tag_brute(img)
-				low_acc.append(face_path)
-				flag = False
-			else:
+		img = cv2.imread(face_path)
+		print("FACE PATH :",face_path, flush=True)
+		class_acc = classify_face(img)
+		acc_keys = list(class_acc.keys())
+		max_acc_class = acc_keys[0] if len(acc_keys) else None
+
+		if max_acc_class is not None and class_acc[max_acc_class] >= CLASSIFY_THRESH:
+
+			cursor.execute('begin')
+
+			try:
+
 				face_class = max_acc_class
+				print(face_class, face_classes[face_class])
+				query = 'SELECT complete_image_path FROM untagged_images WHERE face_path = (?)'
+				complete_img_path = cursor.execute(query, (face_path,)).fetchall()[0][0]
+				print("QUERY 1 executed",flush=True)
 
-			if max_acc_class is None:
-				low_acc.append(face_path)
-			
-			if flag and max_acc_class is not None:
+				query = 'INSERT INTO image_tags(image_path, face) VALUES(?, ?)'
+				print("THIS TIHNG", complete_img_path, face_classes[face_class])
+				cursor.execute(query, (complete_img_path, face_classes[face_class]))
+				print("QUERY 2 executed",flush=True)
 
-				cursor.execute('begin')
+				query = 'INSERT INTO tagged_faces(face_path, class) VALUES(?, ?)'
+				cursor.execute(query, (face_path, face_classes[face_class]))
+				print("QUERY 3 executed",flush=True)
 
-				try:
+				query = 'DELETE FROM untagged_images WHERE face_path = (?)'
+				cursor.execute(query, (face_path,))
+				print("QUERY 4 executed",flush=True)
 
-					query = 'SELECT complete_image_path FROM untagged_images WHERE face_path = (?)'
-					complete_img_path = cursor.execute(query, (face_path,)).fetchall()[0][0]
-					query = 'INSERT INTO image_tags(image_path, face) VALUES(?, ?)'
-					print("THIS TIHNG", complete_img_path, face_classes[face_class])
-					cursor.execute(query, (complete_img_path, face_classes[face_class]))
-					query = 'INSERT INTO tagged_faces(face_path, class) VALUES(?, ?)'
-					cursor.execute(query, (face_path, face_classes[face_class]))
-					query = 'DELETE FROM untagged_images WHERE face_path = (?)'
-					cursor.execute(query, (face_path,))
 
-					query = 'SELECT * FROM untagged_images WHERE complete_image_path = (?);'
-					result = cursor.execute(query, (complete_img_path,)).fetchall()
-					if not len(result):
-						query = 'UPDATE all_images SET tagged=1 WHERE image_path=(?);'
-						cursor.execute(query, (complete_img_path,))
+				query = 'SELECT * FROM untagged_images WHERE complete_image_path = (?);'
+				result = cursor.execute(query, (complete_img_path,)).fetchall()
+				if not len(result):
+					query = 'UPDATE all_images SET tagged=1 WHERE image_path=(?);'
+					cursor.execute(query, (complete_img_path,))
+					print("QUERY 5 executed",flush=True)
 
-					con.commit()
+				con.commit()
 
-				except:
-					con.rollback()
+			except:
+				print("SQLITE ERROR :(")
+				con.rollback()
 
+		else:
+			low_acc.append(face_path)
 
 	return low_acc
 

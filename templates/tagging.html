@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<input type="button" class="btn btn-primary" onclick="submit()" value="Submit tags" >
 	<div class="masonry" style="padding: 3rem">
 		{{ divs | safe }}
 		<div id="myModal" class="modal" >
@@ -9,12 +10,12 @@
 			<div id="caption"></div>
 		</div>
 	</div>
-	<input type="button" onclick="submit()" value="Done" >
 	<!-- <script src="static/script.js"></script> -->
 	<script>
 		window.onload = function()
 		{
 			document.getElementById("filefield").style.visibility = "hidden";
+			document.getElementById("train").style.visibility = "hidden";
 		}
 		function submit()
 		{

@@ -14,28 +14,37 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'tiff'}
 @app.route('/', methods=['GET', 'POST'])
 def home_page():
 
+	utils.tag_all_faces()
+
 	search = request.args.get('q')
 	search = '' if search is None else search
 
 	con = sl.connect(db.DB_PATH)
 	cursor = con.cursor()
-	query = "SELECT DISTINCT image_path FROM all_images" if search=='' else f"SELECT DISTINCT image_path FROM class JOIN image_tags WHERE class.ID == image_tags.face and class.class LIKE '{search.lower()}%'"
+	# query = "SELECT DISTINCT image_path FROM all_images" if search=='' else f"SELECT DISTINCT image_path FROM class JOIN image_tags WHERE class.ID == image_tags.face and class.class LIKE '{search.lower()}%'"
+	query = "SELECT image_tags.image_path, class.class FROM all_images JOIN image_tags JOIN class where image_tags.image_path=all_images.image_path and image_tags.face=class.id"
 	cursor.execute(query)
-	images = cursor.fetchall()
+	result = cursor.fetchall()
+
+	tags = {}
+	for image,tag in result:
+		tags[image] = tags.get(image,[]) + [tag,]
+
+	print(tags)
 
 	divs =[]
-	for i in images:
+	for image in tags.keys():
 		divs.append(
 			f"""
 			<div class="brick">
-			<img src="{i[0]}" alt="{os.path.basename(i[0])}">
+			<img src="{image}" alt="{os.path.basename(image)} - {', '.join(tags[image])}">
 			</div>
 			"""
 		)
 
 	divs = "\n".join(divs)
 
-	divs = "<h3> No images found </h3>" if divs == '' else divs
+	divs = "<h3 style='color: white'> No images found </h3>" if divs == '' else divs
 
 	# if request.method == 'POST':
 
@@ -75,7 +84,7 @@ def tagging():
 	# query = "SELECT face_path FROM untagged_images"
 	# cursor.execute(query)
 	images = utils.tag_all_faces()
-	print(images)
+	print("FACE IMAGE LIST",images)
 
 	classes = db.get_classes()
 	print(classes)
@@ -100,6 +109,7 @@ def tagging():
 		)
 
 	divs = "\n".join(divs)
+	divs = "<h3 style='color: white'> All images tagged </h3>" if divs == '' else divs
 
 	return render_template('tagging.html', divs=divs)
 
@@ -119,15 +129,15 @@ def get_post_javascript_data():
 	for face_path, class_name in tags:
 
 		class_id = cursor.execute(f"SELECT id FROM class where class = '{class_name}'").fetchall()
-
 		cursor.execute('begin')
 
 		try:
 
-			if not len(class_id): # new class to be created
+			if len(class_id)==0: # new class to be created
 
 				query = 'INSERT INTO class(id, class) VALUES(?, ?)'
 				cursor.execute(query, (MAX_ID, class_name))
+				print("QUERY 0 executed",flush=True)
 				face_classes[class_name] = MAX_ID
 				class_id = MAX_ID
 				MAX_ID += 1
@@ -136,32 +146,36 @@ def get_post_javascript_data():
 
 				class_id=class_id[0][0]
 
-			query = 'SELECT complete_image_path FROM  WHERE face_path = (?)'
+			query = 'SELECT complete_image_path FROM untagged_images WHERE face_path = (?)'
 			complete_img_path = cursor.execute(query, (face_path,)).fetchall()[0][0]
+			print("QUERY 1 executed",flush=True)
+
 			query = 'INSERT INTO image_tags(image_path, face) VALUES(?, ?)'
 			cursor.execute(query, (complete_img_path, class_id))
+			print("QUERY 2 executed",flush=True)
+
 			query = 'INSERT INTO tagged_faces(face_path, class) VALUES(?, ?)'
 			cursor.execute(query, (face_path, class_id))
+			print("QUERY 3 executed",flush=True)
+
 			query = 'DELETE FROM untagged_images WHERE face_path = (?)'
 			cursor.execute(query, (face_path,))
+			print("QUERY 4 executed",flush=True)
+
+
+			# cursor.execute('begin')
+
+					
+			query = 'SELECT * FROM untagged_images WHERE complete_image_path = (?);'
+			result = cursor.execute(query, (complete_img_path,)).fetchall()
+			if len(result)==0:
+				query = 'UPDATE all_images SET tagged=1 WHERE image_path=(?);'
+				cursor.execute(query, (complete_img_path,))
+
 			con.commit()
 
-			cursor.execute('begin')
-
-			try:
-					
-				query = 'SELECT * FROM untagged_images WHERE complete_image_path = (?);'
-				result = cursor.execute(query, (complete_img_path,)).fetchall()
-				if not len(result):
-					query = 'UPDATE all_images SET tagged=1 WHERE image_path=(?);'
-					cursor.execute(query, (complete_img_path,))
-
-				con.commit()
-
-			except:
-				con.rollback()
-
 		except:
+			print("SQLITE ERROR 2")
 			con.rollback()
 
 	return "done"
@@ -174,3 +188,5 @@ def train():
 if __name__ == '__main__':
 	app.debug = True
 	app.run(host="0.0.0.0",port=4000)
+
+# terminate called without an active exception

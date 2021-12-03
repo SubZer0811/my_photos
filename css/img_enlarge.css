@@ -32,6 +32,7 @@
   
   /* Caption of Modal Image */
   #caption {
+	font-size: xx-large;
 	margin: auto;
 	display: block;
 	width: 80%;
