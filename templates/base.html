@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="static/img_enlarge.css">
+	<link rel="stylesheet" href="static/labs.css">
+	<link rel="stylesheet" href="static/masonry.css">
+	<!-- 
+ -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+
+</head>
+<body style="background-color: rgb(14, 17, 23)">
+
+	<nav class="navbar navbar-expand-lg navbar-light bg-light" style="padding: 0.5em 1.5em 0.5em 1.5em;">
+		<a class="navbar-brand" href="#">My Photos</a>
+		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+		  <span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+		  <ul class="navbar-nav">
+			<li class="nav-item">
+			  <a class="nav-link" href="/">Home</a>
+			</li>
+			<li class="nav-item" style="width:max-content">
+			  <a class="nav-link" href="/tagging">Tag your friends</a>
+			</li>
+		  </ul>
+		</div>
+		<input type="button" id="train" value="Re-train Classifier">
+		<input type="text" id="search_box" class="form-control mr-sm-2" value="{{ search }}" placeholder="Search for people" style="margin: 0 6em 0 6em;">
+		
+				<form method="post" enctype="multipart/form-data">
+				<input type="file" name="file" id="filefield" multiple class="file-format">
+				<!-- <input type="submit" value="Upload"> -->
+				<!-- <input type="submit"  id="submit"> -->
+				</form>
+		
+
+
+
+		<!-- <input type="file" id="upload" class="file btn btn-lg btn-primary" multiple oninput="test()"/> -->
+	  </nav>
+
+	{% block content %}
+	{% endblock %}
+	  <!-- <script>
+		  $("form").on("change", ".file-upload-image", function(){ 
+    $(this).parent(".file-upload-wrap").attr("data-text",         $(this).val().replace(/.*(\/|\\)/, '') );
+});
+		  </script> -->
+	<script>
+		document.getElementById("search_box").onkeydown = function(evt)
+		{
+			if(evt.key =="Enter")
+				window.location.href = `/?q=${evt.target.value}`;
+		}
+		document.getElementById('filefield').onchange = function() {
+		this.form.submit();
+		// window.location.reload();
+		};
+		document.getElementById('train').onclick = function() {
+			$.ajax(
+			{
+				url: "/train",
+				type: "POST",
+				success: function (data)
+				{
+					alert(`${tag_data.length} images tagged!`);
+				}
+			});
+		};
+	</script>
+
+</body>
+</html>

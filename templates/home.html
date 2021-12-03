@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<div class="masonry" style="padding: 3rem">
+		{{ divs | safe }}
+		<div id="myModal" class="modal" >
+			<span class="close">&times;</span>
+			<img class="modal-content" id="img01">
+			<div id="caption"></div>
+		</div>
+	</div>
+	<script src="static/script.js"></script>
+{% endblock %}

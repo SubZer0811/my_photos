@@ -4,7 +4,7 @@ import os
 import db
 import sqlite3 as sl
 
-FACES_PATH = "faces"
+FACES_PATH = "static/faces"
 CLASSIFY_THRESH = 0.8
 
 print("[!] Loading Face Detection Model (yolov3-tiny)...")
@@ -16,7 +16,7 @@ classes = ['faces']
 colors = [(0, 255, 0)]
 print("[+] Face Detection Model Loaded Successfully!")
 
-# import face_classifier as fc
+import face_classifier as fc
 
 def imshow (win_name, img):
 	cv2.namedWindow(win_name, cv2.WND_PROP_FULLSCREEN | cv2.WINDOW_NORMAL)
@@ -129,6 +129,7 @@ def add_image (img_path: str) -> None:
 	Step-1: Add image_path to table:all_images with tagged=0.
 	Step-2: Detect all faces, crop and save. Add cropped faces to the table: untagged_images.
 	'''
+	print("IMAGE ADDED AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
 	con = sl.connect(db.DB_PATH)
 	cursor = con.cursor()
@@ -215,6 +216,91 @@ def tag_image (complete_img_path: str) -> None:
 		db.print_error(er)
 		con.rollback()
 
+def tag_all_faces() -> None:
+	'''
+	This function takes a complete image as input and classifies all the faces in that image.
+	Once all the faces are tagged, the tags are pushed onto the table: tagged_faces.
+	It calls classify_face to infer from the classifier. If the best accuracy 
+	is less than CLASSIFY_THRESH, then the user is asked to tag the face by 
+	calling user_tag_brute.
+
+	step-1: get all face images for given image. for each face image
+		step-1a: classify
+		step-1b: insert face class to image_tags table
+		step-1c: insert face class to tagged_faces table
+		step-1d: remove face image from untagged_images
+	step-2: change bool value of tagged in all_images to 1
+	'''
+
+	# if face_class not in list(face_classes.keys()):
+	# 	query = 'INSERT INTO class(id, class) VALUES(?, ?)'
+	# 	cursor.execute(query, (MAX_ID, face_class))
+	# 	face_classes[face_class] = MAX_ID
+	# 	MAX_ID += 1
+
+	con = sl.connect(db.DB_PATH)
+	cursor = con.cursor()
+
+	face_classes = dict(db.get_classes())
+
+	query = "SELECT face_path FROM untagged_images"
+	rows = cursor.execute(query)
+	face_paths = [i[0] for i in rows.fetchall()]
+	low_acc=[]
+
+	for face_path in face_paths:
+			print(face_path)
+
+			img = cv2.imread(face_path)
+			class_acc = classify_face(img)
+			flag = True
+			acc_keys = list(class_acc.keys())
+			max_acc_class = acc_keys[0] if len(acc_keys) else None
+			if max_acc_class is not None and class_acc[max_acc_class] < CLASSIFY_THRESH:
+				# face_class = user_tag_brute(img)
+				low_acc.append(face_path)
+				flag = False
+			else:
+				face_class = max_acc_class
+
+			if max_acc_class is None:
+				low_acc.append(face_path)
+			
+			if flag and max_acc_class is not None:
+
+				cursor.execute('begin')
+
+				try:
+
+					query = 'SELECT complete_image_path FROM untagged_images WHERE face_path = (?)'
+					complete_img_path = cursor.execute(query, (face_path,)).fetchall()[0][0]
+					query = 'INSERT INTO image_tags(image_path, face) VALUES(?, ?)'
+					print("THIS TIHNG", complete_img_path, face_classes[face_class])
+					cursor.execute(query, (complete_img_path, face_classes[face_class]))
+					query = 'INSERT INTO tagged_faces(face_path, class) VALUES(?, ?)'
+					cursor.execute(query, (face_path, face_classes[face_class]))
+					query = 'DELETE FROM untagged_images WHERE face_path = (?)'
+					cursor.execute(query, (face_path,))
+
+					query = 'SELECT * FROM untagged_images WHERE complete_image_path = (?);'
+					result = cursor.execute(query, (complete_img_path,)).fetchall()
+					if not len(result):
+						query = 'UPDATE all_images SET tagged=1 WHERE image_path=(?);'
+						cursor.execute(query, (complete_img_path,))
+
+					con.commit()
+
+				except:
+					con.rollback()
+
+
+	return low_acc
+
+def update_tagged_status():
+	''' This function looks at images with tagged = False and updates it to True if tagging was already done '''
+	pass
+	
+
 def classify_face (img) -> dict:
 	'''
 	This function takes a cv Mat object image as input and attempts to classify it.
@@ -230,4 +316,4 @@ def classify_face (img) -> dict:
 # tag_image('images/DSC_0406.JPG')
 
 # print(dict(db.get_classes()))
-print(classify_face(cv2.imread('faces/DSC_0403_1.png')))
+# print(classify_face(cv2.imread('faces/DSC_0403_1.png')))

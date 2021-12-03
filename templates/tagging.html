@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<div class="masonry" style="padding: 3rem">
+		{{ divs | safe }}
+		<div id="myModal" class="modal" >
+			<span class="close">&times;</span>
+			<img class="modal-content" id="img01">
+			<div id="caption"></div>
+		</div>
+	</div>
+	<input type="button" onclick="submit()" value="Done" >
+	<!-- <script src="static/script.js"></script> -->
+	<script>
+		window.onload = function()
+		{
+			document.getElementById("filefield").style.visibility = "hidden";
+		}
+		function submit()
+		{
+			var inputs = document.getElementsByTagName('input');
+			var tag_data = [];
+			for(var i=2; i<inputs.length-1; i++)
+				if (inputs[i].value.length)
+					tag_data.push([inputs[i].id, inputs[i].value]);
+			var tag_data_json = JSON.stringify(tag_data);
+
+			$.ajax(
+			{
+				url: "/tagging_final",
+				type: "POST",
+				data:
+				{
+					'javascript_data': tag_data_json,
+				},
+				timeout: 60000,
+				success: function (data)
+				{
+					alert(`${tag_data.length} images tagged!`);
+				}
+			});
+		}
+		
+	</script>
+{% endblock %}
