@@ -49,7 +49,8 @@ def create_tables (con, table_name) -> None:
 		con.execute("""
 			CREATE TABLE image_tags (
 				image_path TEXT NOT NULL,
-				face NUMBER
+				face NUMBER,
+				PRIMARY KEY (image_path, face)
 			);
 		""")
 

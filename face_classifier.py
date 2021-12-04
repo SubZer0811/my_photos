@@ -40,7 +40,8 @@ def train():
 	model.compile(	loss='binary_crossentropy',
 					optimizer='ADAM',
 					metrics=['accuracy'])
-	model.fit(x_train, y_train, epochs=20)
+	if len(x_train):
+		model.fit(x_train, y_train, epochs=20)
 	model.save_weights("classifier.h5")
 	print("[+] Training process complete.")
 	print("[+] New weights saved as 'classifier.h5'")
@@ -66,6 +67,6 @@ except:
 	model.load_weights('classifier.h5')
 print("[+] Face Classification Model Loaded Successfully!")
 
-test_image = cv2.resize(cv2.imread("faces/DSC_0405_3.png"), (IMAGE_RESIZE, IMAGE_RESIZE))
-cv2.imshow("asdf", test_image)
-print(model.predict(np.asarray([test_image])))
+# test_image = cv2.resize(cv2.imread("faces/DSC_0405_3.png"), (IMAGE_RESIZE, IMAGE_RESIZE))
+# cv2.imshow("asdf", test_image)
+# print(model.predict(np.asarray([test_image])))

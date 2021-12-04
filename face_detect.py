@@ -225,7 +225,7 @@ def classify_face (img) -> dict:
 	}
 	return class_acc
 
-add_image('images/DSC_0404.JPG')
+# add_image('images/DSC_0404.JPG')
 # tag_image('images/DSC_0403.JPG')
 
-print(dict(get_classes()))
+# print(dict(get_classes()))
