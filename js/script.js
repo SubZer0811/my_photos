@@ -17,7 +17,7 @@ window.onload = function() {
         }
     }
 
-var span = document.getElementsByClassName("close")[0];
+var span = document.getElementById('myModal');//document.getElementsByClassName("close")[0];
 
 span.onclick = function() { 
   modal.style.display = "none";
