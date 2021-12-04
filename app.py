@@ -186,6 +186,7 @@ def train():
 	return "done"
 
 if __name__ == '__main__':
+	face_classifier.train()
 	app.debug = True
 	app.run(host="0.0.0.0",port=4000)
 
