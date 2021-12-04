@@ -23,6 +23,8 @@ def home_page():
 	cursor = con.cursor()
 	# query = "SELECT DISTINCT image_path FROM all_images" if search=='' else f"SELECT DISTINCT image_path FROM class JOIN image_tags WHERE class.ID == image_tags.face and class.class LIKE '{search.lower()}%'"
 	query = "SELECT image_tags.image_path, class.class FROM all_images JOIN image_tags JOIN class where image_tags.image_path=all_images.image_path and image_tags.face=class.id"
+	if search:
+		query = f"{query} and class.class LIKE '{search.lower()}%'"
 	cursor.execute(query)
 	result = cursor.fetchall()
 
@@ -90,7 +92,7 @@ def tagging():
 	print(classes)
 
 	class_names = [class_name for class_name,id in classes]
-	class_names.remove('none')
+	# class_names.remove('none')
 	options = [ f'<option value="{class_name}">' for class_name in class_names ]
 	options = '\n'.join(options)
 	print(options)
@@ -100,7 +102,7 @@ def tagging():
 			f"""
 			<div class="brick">
 			<img src="{i}" alt="{os.path.basename(i)}" height="256" width="auto">
-			<input list="classes" name="class" id="{i}">
+			<input list="classes" name="class" id="{i}" style="margin-left:1rem">
 			<datalist id="classes">
 				{options}
 			</datalist>
@@ -126,10 +128,13 @@ def get_post_javascript_data():
 	face_classes = dict(db.get_classes())
 	MAX_ID = len(face_classes)-1
 
+	n=0
+
 	for face_path, class_name in tags:
 
 		class_id = cursor.execute(f"SELECT id FROM class where class = '{class_name}'").fetchall()
 		cursor.execute('begin')
+		print(class_id, f"SELECT id FROM class where class = '{class_name}'")
 
 		try:
 
@@ -162,9 +167,7 @@ def get_post_javascript_data():
 			cursor.execute(query, (face_path,))
 			print("QUERY 4 executed",flush=True)
 
-
 			# cursor.execute('begin')
-
 					
 			query = 'SELECT * FROM untagged_images WHERE complete_image_path = (?);'
 			result = cursor.execute(query, (complete_img_path,)).fetchall()
@@ -172,22 +175,26 @@ def get_post_javascript_data():
 				query = 'UPDATE all_images SET tagged=1 WHERE image_path=(?);'
 				cursor.execute(query, (complete_img_path,))
 
+			n+=1
 			con.commit()
 
 		except:
 			print("SQLITE ERROR 2")
 			con.rollback()
 
-	return "done"
+	return str(n)
 
 @app.route('/train', methods=['POST'])
 def train():
-	face_classifier.train()
+	try:
+		face_classifier.train()
+	except:
+		pass
 	return "done"
 
 if __name__ == '__main__':
-	face_classifier.train()
-	app.debug = True
+	# face_classifier.train()
+	# app.debug = True
 	app.run(host="0.0.0.0",port=4000)
 
 # terminate called without an active exception

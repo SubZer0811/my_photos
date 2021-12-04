@@ -35,14 +35,15 @@
   
   /* Caption of Modal Image */
   #caption {
+	font-size: xxx-large;
 	margin: auto;
 	display: block;
 	width: 80%;
-	max-width: 700px;
+	/* max-width: 700px; */
 	text-align: center;
-	color: #ccc;
+	color: rgb(214, 214, 214);
 	padding: 10px 0;
-	height: 150px;
+	height: min-content;
   }
   
   /* Add Animation */

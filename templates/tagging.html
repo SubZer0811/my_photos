@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<input type="button" class="btn btn-primary" onclick="submit()" value="Submit tags" >
+	<div style="display: flex; justify-content: center; align-items: center; padding-top: 1em;">
+		<input type="button" class="btn btn-primary" onclick="submit()" value="Submit tags" >
+	</div>
 	<div class="masonry" style="padding: 3rem">
 		{{ divs | safe }}
 		<div id="myModal" class="modal" >
@@ -21,7 +23,7 @@
 		{
 			var inputs = document.getElementsByTagName('input');
 			var tag_data = [];
-			for(var i=2; i<inputs.length-1; i++)
+			for(var i=3; i<inputs.length; i++)
 				if (inputs[i].value.length)
 					tag_data.push([inputs[i].id, inputs[i].value]);
 			var tag_data_json = JSON.stringify(tag_data);
@@ -37,7 +39,7 @@
 				timeout: 60000,
 				success: function (data)
 				{
-					alert(`${tag_data.length-1} images tagged!`);
+					alert(`${data} images tagged!`);
 				}
 			});
 		}

@@ -5,7 +5,7 @@ import db
 import sqlite3 as sl
 
 FACES_PATH = "static/faces"
-CLASSIFY_THRESH = 0.8
+CLASSIFY_THRESH = 0.7
 
 print("[!] Loading Face Detection Model (yolov3-tiny)...")
 net = cv2.dnn.readNetFromDarknet('face-detect-yolov3-tiny.cfg', 'face-yolov3-tiny_41000.weights')
@@ -297,6 +297,7 @@ def tag_all_faces() -> None:
 				con.rollback()
 
 		else:
+			print(class_acc)
 			low_acc.append(face_path)
 
 	return low_acc
